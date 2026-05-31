@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <meta name="theme-color" content="#1a1320" />
+  <meta name="description" content="City of Joy — an anime-styled life-sim mystery set in a stylized Kolkata. Solve The Missing Manuscript." />
+  <title>City of Joy — The Missing Manuscript</title>
+  <link rel="stylesheet" href="./styles.css" />
+  <!-- No build step: Three.js is loaded from a CDN via an import map. -->
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js"
+    }
+  }
+  </script>
+</head>
+<body>
+  <!-- 3D canvas -->
+  <canvas id="game-canvas"></canvas>
+
+  <!-- ================= LOADING ================= -->
+  <div id="loading" class="screen">
+    <div class="loading-inner">
+      <div class="logo-small">City of Joy</div>
+      <div class="spinner"></div>
+      <div id="loading-text">Waking up the city…</div>
+    </div>
+  </div>
+
+  <!-- ================= START SCREEN ================= -->
+  <div id="start-screen" class="screen hidden">
+    <div class="panel start-panel">
+      <h1 class="title">City of Joy</h1>
+      <p class="subtitle">The Missing Manuscript</p>
+      <p class="blurb">
+        Dawn on College Street, Kolkata. Professor Sen's rare Tagore notebook has vanished
+        from the book fair. As a young journalist, gather clues, photograph the scene,
+        win people's trust — and crack the case before the lamps come on.
+      </p>
+      <div id="device-note" class="device-note"></div>
+      <div class="btn-row">
+        <button id="btn-play" class="btn btn-primary">▶ Play</button>
+        <button id="btn-continue" class="btn hidden">Continue</button>
+        <button id="btn-how" class="btn btn-ghost">How to play</button>
+      </div>
+      <div class="credit">A playable slice • Three.js • runs on PC &amp; phone</div>
+    </div>
+  </div>
+
+  <!-- ================= HOW TO PLAY ================= -->
+  <div id="how-screen" class="screen hidden">
+    <div class="panel">
+      <h2>How to play</h2>
+      <div id="how-content"></div>
+      <button id="btn-how-close" class="btn btn-primary">Got it</button>
+    </div>
+  </div>
+
+  <!-- ================= HUD ================= -->
+  <div id="hud" class="hidden">
+    <!-- top-left: clock + day + bond -->
+    <div class="hud-top-left">
+      <div class="clock-box">
+        <span id="hud-day">Day 1</span>
+        <span id="hud-clock">06:00</span>
+      </div>
+      <div class="bond-box" title="Bond with Riya">
+        <span class="bond-label">Riya</span>
+        <span id="hud-bond" class="hearts">♡♡♡♡♡</span>
+      </div>
+    </div>
+
+    <!-- top-right: buttons -->
+    <div class="hud-top-right">
+      <button id="btn-mute" class="icon-btn" title="Sound">🔊</button>
+      <button id="btn-journal" class="icon-btn" title="Journal (J)">📓</button>
+      <button id="btn-pause" class="icon-btn" title="Menu (Esc)">☰</button>
+    </div>
+
+    <!-- objective tracker -->
+    <div id="objective" class="objective">
+      <div class="objective-title">Objective</div>
+      <div id="objective-text">Find Professor Sen at the book fair.</div>
+      <div id="clue-count" class="clue-count">Clues: 0 / 3</div>
+    </div>
+
+    <!-- stamina -->
+    <div class="stamina-wrap">
+      <div class="stamina-label">Stamina</div>
+      <div class="stamina-bar"><div id="stamina-fill"></div></div>
+    </div>
+
+    <!-- photo strip -->
+    <div id="photo-strip" class="photo-strip"></div>
+
+    <!-- contextual interaction prompt -->
+    <div id="prompt" class="prompt hidden"></div>
+
+    <!-- toast notifications -->
+    <div id="toast" class="toast hidden"></div>
+
+    <!-- camera-mode reticle -->
+    <div id="camera-overlay" class="camera-overlay hidden">
+      <div class="cam-frame"></div>
+      <div class="cam-hint">Aim and capture</div>
+    </div>
+  </div>
+
+  <!-- ================= MOBILE CONTROLS ================= -->
+  <div id="touch-controls" class="hidden">
+    <div id="joystick" class="joystick">
+      <div id="joystick-knob" class="joystick-knob"></div>
+    </div>
+    <div class="touch-buttons">
+      <button id="tbtn-run" class="touch-btn">RUN</button>
+      <button id="tbtn-camera" class="touch-btn">📷</button>
+      <button id="tbtn-interact" class="touch-btn touch-btn-main">●</button>
+    </div>
+  </div>
+
+  <!-- ================= DIALOGUE ================= -->
+  <div id="dialogue" class="dialogue hidden">
+    <div class="dialogue-box">
+      <div id="dialogue-name" class="dialogue-name">Name</div>
+      <div id="dialogue-text" class="dialogue-text"></div>
+      <div id="dialogue-choices" class="dialogue-choices"></div>
+      <div id="dialogue-continue" class="dialogue-continue hidden">▼ tap / click / Space</div>
+    </div>
+  </div>
+
+  <!-- ================= JOURNAL ================= -->
+  <div id="journal" class="screen hidden">
+    <div class="panel">
+      <h2>Journal</h2>
+      <h3>Clues</h3>
+      <ul id="journal-clues" class="journal-list"><li class="muted">No clues yet.</li></ul>
+      <h3>People</h3>
+      <ul id="journal-people" class="journal-list"></ul>
+      <button id="btn-journal-close" class="btn btn-primary">Close</button>
+    </div>
+  </div>
+
+  <!-- ================= DEDUCTION MODAL ================= -->
+  <div id="deduction" class="screen hidden">
+    <div class="panel">
+      <h2>Deduction</h2>
+      <p>You've gathered the clues. Who took Professor Sen's manuscript — and what really happened?</p>
+      <div id="deduction-choices" class="deduction-choices"></div>
+    </div>
+  </div>
+
+  <!-- ================= PAUSE MENU ================= -->
+  <div id="pause-screen" class="screen hidden">
+    <div class="panel">
+      <h2>Paused</h2>
+      <div class="btn-col">
+        <button id="btn-resume" class="btn btn-primary">Resume</button>
+        <button id="btn-pause-how" class="btn btn-ghost">How to play</button>
+        <button id="btn-restart" class="btn btn-ghost">Restart from start</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= END SCREEN ================= -->
+  <div id="end-screen" class="screen hidden">
+    <div class="panel end-panel">
+      <h1 id="end-title">Case Closed</h1>
+      <div id="end-rank" class="end-rank">★★★</div>
+      <div id="end-summary" class="end-summary"></div>
+      <button id="btn-end-replay" class="btn btn-primary">Play again</button>
+    </div>
+  </div>
+
+  <!-- A no-modules fallback message -->
+  <noscript>
+    <div class="screen"><div class="panel"><h2>JavaScript required</h2>
+    <p>Please enable JavaScript to play City of Joy.</p></div></div>
+  </noscript>
+
+  <script type="module" src="./src/main.js"></script>
+</body>
+</html>
